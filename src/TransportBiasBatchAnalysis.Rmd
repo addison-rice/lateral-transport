@@ -103,35 +103,17 @@ nemo_nov_may <- nemo_ssts %>%
             mean_dist = mean(dist_final),
             mean_deep_dist = mean(dist_150m))
 
-site_ssts_nemo <- site_ssts_nemo %>%
-    transform(endpt_sst = as.numeric(endpt_sst),
-            deep_sst = as.numeric(deep_sst))
-
-nemo_site_ann <- site_ssts_nemo %>%
-  group_by(run_loc,site_lat,site_lon) %>%
-  summarise(ann_site_sst = mean(endpt_sst),
-            ann_site_deep_sst = mean(deep_sst))
-
-nemo_site_nov_may <- site_ssts_nemo %>%
-  filter(months_end %in% c(11,12,1,2,3,4,5)) %>%
-  group_by(run_loc,site_lat,site_lon) %>%
-  summarise(nov_may_site_sst = mean(endpt_sst),
-            nov_may_site_deep = mean(deep_sst))
-```
-
-
-Match up the tables so site and endpoint are in the same table
-```{r}
-nemo_means_all <- left_join(nemo_means,nemo_site_ann, by = "run_loc")
-nemo_nov_may_all <- left_join(nemo_nov_may, nemo_site_nov_may, by = "run_loc")
-
 ```
 
 
 
 
 
-Now calculate the offset, (end - site)
+
+
+Now calculate the offset, (end - site), where site is represented by the 1000 m/d sinking speed
+
+Might have to pivot wider on speed, then calculate the offsets, then pivot longer again? Any way to make a column for the 1000 m/d sinking speed?
 ```{r}
 nemo_mean_offset <- nemo_means_all %>%
   mutate(offset_ann_sst = ann_sst - ann_site_sst,
