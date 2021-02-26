@@ -1,0 +1,65 @@
+---
+title: "R Plots for Lateral Transport in the Mediterranean"
+output: html_notebook
+---
+
+
+
+
+
+Notebook for making pretty figures from the lateral transport study.
+
+```{r}
+library(tidyverse)
+```
+
+
+Load data output from the batch analysis code.
+```{r}
+nemo_results_traj <- read_csv("nemo_results_traj.csv")
+nemo_mean_ann_results <- read_csv("nemo_mean_ann_results.csv")
+nemo_nov_may_results <- read_csv("nemo_nov_may_results.csv")
+uk37_results_datatable <-read_csv("uk37_results_datatable.csv")
+tex86_results_datatable <- read_csv("tex86_results_datatable.csv")
+```
+
+Let's start by plotting transport distance and temperature offsets, maybe in jitter plots?
+```{r}
+plot1 <- nemo_mean_ann_results %>%
+  ggplot(aes(
+    x = speed,
+    y = mean_dist,
+    color = offset_ann_sst
+  )) +
+  geom_jitter() +
+  scale_color_gradient2() +
+  theme_grey()
+
+plot1
+```
+
+
+Proxy offsets vs lateral transport offsets
+```{r}
+uk37_results_datatable$speed = factor(uk37_results_datatable$speed,levels = c("Sp_500","Sp_250","Sp_100","Sp_50","Sp_25","Sp_12","Sp_6"))
+
+plot2 <- uk37_results_datatable %>%
+  ggplot(aes(
+    x = offset_ann_sst,
+    y = proxy_offset_site,
+    color = speed
+  )) + 
+  geom_point() +
+  scale_color_brewer(palette = "YlGn") +
+  theme_minimal()
+
+plot2
+```
+
+
+
+
+
+
+
+

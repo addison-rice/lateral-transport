@@ -1,0 +1,637 @@
+---
+title: "Transport bias from batch runs"
+output: html_notebook
+---
+
+New version of the transport bias analysis to account for the lack of site IDs in the batch output files and just make sure things are relatively clean.
+
+
+```{r}
+library(tidyverse)
+
+```
+
+
+
+Load:
+    the database that lists all sites and their associated proxies
+    the batch runs file
+    the csv files with climatology SSTs.
+    files with the core-top data for each proxy
+
+```{r}
+proxy_db <- read_csv('../data/raw/Sediment_Locations.csv')
+
+sites_run <- read_csv('../data/raw/batch_runs.csv')
+
+sst_data <- read_csv('../data/temp/extracted_data.csv')
+
+#site_ssts_nemo <- read_csv('/home/addison/Documents/School/Utrecht/site_ssts_1000.csv')
+
+# For now, just UK37, TEX86, and foram d18O
+uk37_coretop <- read_csv('../data/raw/uk37_table.csv')
+tex86_coretop <- read_csv('../data/raw/tex_table.csv')
+d18O_coretop <- read_csv('../data/raw/d18O_table.csv')
+```
+
+
+
+
+
+Grab the site IDs. First need to create a table with just the locations that are run locations, then match on that.
+```{r}
+run_locs <- proxy_db %>%
+  filter(proxy_db$Location_key == proxy_db$run_loc) %>%
+  select(c("run_loc","Latitude","Longitude"))
+  
+sst_data <- left_join(sst_data, run_locs, by = c("site_lat" = "Latitude", "site_lon" = "Longitude"))
+
+#site_ssts_nemo <- left_join(site_ssts_nemo, run_locs, by = c("site_lat" = "Latitude", "site_lon" = "Longitude"))
+```
+
+
+Since not all of the site IDs made a match, I'll export and do the rest in excel, then load it back in.
+```{r}
+write_csv(sst_data,"sst_data_to_match_sites.csv")
+write_csv(site_ssts_nemo,"site_sst_data_to_match_sites.csv")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Now bring it back in...
+```{r}
+sst_data <- read_csv('/home/addison/Documents/School/Utrecht/sst_data_matched_sites.csv')
+
+site_ssts_nemo <- read_csv('/home/addison/Documents/School/Utrecht/site_sst_data_matched_sites.csv')
+
+```
+
+
+
+Let's figure out how to get the lists of monthly ssts into number format
+```{r}
+months <- c('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')
+sst_data <- sst_data %>%
+  separate('site_sst_61-90', paste('sitesst_61_90',months,sep = '_'),",") %>%
+  separate('site_sst_71-00', paste('sitesst_71_00',months,sep = '_'),",") %>%
+  separate('end_sst_61-90', paste('endsst_61_90',months,sep = '_'),",") %>%
+  separate('end_sst_71-00', paste('endsst_71_00',months,sep = '_'),",")
+```
+
+
+Separate the climatology SSTs and the NEMO SSTs for two separate analyses.
+
+Pivot the climatological ssts and make them numeric.
+```{r}
+clim_ssts <- sst_data %>%
+  select(c(speed:end_lon,dist_final,sitesst_61_90_Jan:endsst_71_00_Dec,months_end,years_end,run_loc)) %>%
+  pivot_longer(
+    cols = sitesst_61_90_Jan:endsst_71_00_Dec,
+    names_to = c("location","sst_dataset","month"),
+    names_pattern = "(.*)(sst_.._..)_(...)",
+    values_to = "clim_sst"
+  ) %>%
+  transform(clim_sst = as.numeric(clim_sst))
+```
+
+
+Grab the NEMO SSTs and make sure the deep data is numeric.
+```{r}
+nemo_ssts <- sst_data %>%
+  select(c(speed:dist_150m,endpt_sst:run_loc)) %>%
+  transform(endpt_sst = as.numeric(endpt_sst),
+            deep_sst = as.numeric(deep_sst))
+```
+
+
+
+
+Calculate the seasonal and annual SSTs
+```{r}
+clim_means <- clim_ssts %>%
+  group_by(run_loc,site_lat,site_lon,location,speed,sst_dataset) %>%
+  summarise(ann_sst = mean(clim_sst))
+
+clim_nov_may <- clim_ssts %>%
+  filter(month %in% c('Nov','Dec','Jan','Feb','Mar','Apr','May')) %>%
+  group_by(run_loc,site_lat,site_lon,location,speed,sst_dataset) %>%
+  summarise(nov_may_sst = mean(clim_sst))
+```
+
+
+Now calculate the offset, (end - site)
+```{r}
+clim_mean_offset <- clim_means %>%
+  pivot_wider(names_from = c(location,sst_dataset),
+              values_from = ann_sst) %>%
+  mutate(offset_ann_61_90 = end_sst_61_90 - site_sst_61_90,
+         offset_ann_71_00 = end_sst_71_00 - site_sst_71_00)
+
+clim_nov_may_offset <- clim_nov_may %>%
+  pivot_wider(names_from = c(location,sst_dataset),
+              values_from = nov_may_sst) %>%
+  mutate(offset_nov_may_61_90 = end_sst_61_90 - site_sst_61_90,
+         offset_nov_may_71_00 = end_sst_71_00 - site_sst_71_00)
+```
+
+
+
+
+
+Now we can calculate the proxy-based SSTs for comparison.
+
+UK37: T = (UK37 - 0.039)/0.034 (Prahl et al. 1988)
+
+TEX86: T = 38.6+68.4*TEX86 (Kim et al. 2010)
+
+```{r}
+uk37_coretop <- uk37_coretop %>%
+  mutate(uk37_sst = (UK37 - 0.039)/0.034)
+tex86_coretop <- tex86_coretop %>%
+  mutate(tex86_sst = 38.6 + 68.4 * log10(TEX86))
+```
+
+
+
+
+
+
+Match the site IDs, run IDs, and get proxy-based subsets
+```{r}
+uk_sites <- filter(proxy_db, (!is.na(proxy_db$UK37_ID)))
+tex_sites <- filter(proxy_db,(!is.na(proxy_db$TEX86_ID)))
+d18O_sites <- filter(proxy_db,(!is.na(proxy_db$foram_d18O_ID)))
+
+uk_ssts_ann <- left_join(uk_sites, clim_mean_offset, by = "run_loc")
+tex_ssts_ann <- left_join(tex_sites, clim_mean_offset, by = "run_loc")
+d18O_ssts_ann <- left_join(d18O_sites, clim_mean_offset, by = "run_loc")
+uk_ssts_nov_may <- left_join(uk_sites, clim_nov_may_offset, by = "run_loc")
+
+uk37_ann_results <- left_join(uk_ssts_ann, uk37_coretop, by = c("UK37_ID"))
+tex86_ann_results <- left_join(tex_ssts_ann, tex86_coretop, by = c("TEX86_ID"))
+d18O_ann_results <- left_join(d18O_ssts_ann, d18O_coretop, by = c("foram_d18O_ID"))
+uk37_nov_may_results <- left_join(uk_ssts_nov_may, uk37_coretop, by = c("UK37_ID"))
+```
+
+
+
+
+
+
+
+
+
+Calculate the proxy offsets
+```{r}
+uk37_ann_results <- uk37_ann_results %>%
+  mutate(proxy_offset_61_90 = uk37_sst - end_sst_61_90,
+         proxy_offset_71_00 = uk37_sst - end_sst_71_00,
+         proxy_offset_site_61_90 = uk37_sst - site_sst_61_90,
+         proxy_offset_site_71_00 = uk37_sst - site_sst_71_00)
+
+tex86_ann_results <- tex86_ann_results %>%
+  mutate(proxy_offset_61_90 = tex86_sst - end_sst_61_90,
+         proxy_offset_71_00 = tex86_sst - end_sst_71_00,
+         proxy_offset_site_61_90 = tex86_sst - site_sst_61_90,
+         proxy_offset_site_71_00 = tex86_sst - site_sst_71_00)
+
+uk37_nov_may_results <- uk37_nov_may_results %>%
+  mutate(proxy_offset_61_90 = uk37_sst - end_sst_61_90,
+         proxy_offset_71_00 = uk37_sst - end_sst_71_00,
+         proxy_offset_site_61_90 = uk37_sst - site_sst_61_90,
+         proxy_offset_site_71_00 = uk37_sst - site_sst_71_00)
+```
+
+
+
+
+
+
+
+Get things ready for plotting in python
+```{r}
+uk37_ann_wider <- select(uk37_ann_results, c("Location_key", "Latitude", "Longitude", "speed":"offset_ann_71_00", "uk37_sst":"proxy_offset_site_71_00")) %>%
+  pivot_wider(names_from = c(speed), values_from = c(end_sst_61_90:offset_ann_71_00,proxy_offset_61_90,proxy_offset_71_00))
+
+
+tex86_ann_wider <- select(tex86_ann_results, c("Location_key", "Latitude", "Longitude", "speed":"offset_ann_71_00", "tex86_sst":"proxy_offset_site_71_00")) %>%
+  pivot_wider(names_from = c(speed), values_from = c(end_sst_61_90:offset_ann_71_00,proxy_offset_61_90,proxy_offset_71_00))
+
+uk37_nov_may_wider <- select(uk37_nov_may_results, c("Location_key", "Latitude", "Longitude", "speed":"offset_nov_may_71_00", "uk37_sst":"proxy_offset_site_71_00")) %>%
+  pivot_wider(names_from = c(speed), values_from = c(end_sst_61_90:offset_nov_may_71_00,proxy_offset_61_90,proxy_offset_71_00))
+
+```
+
+
+
+
+Export to csv
+```{r}
+write_csv(uk37_ann_wider,"uk37_ann_clim_to_plot.csv")
+write_csv(tex86_ann_wider,"tex86_ann_clim_to_plot.csv")
+
+write_csv(uk37_nov_may_wider,"uk37_nov_may_clim_to_plot.csv")
+```
+
+
+
+Now do the same for the NEMO ssts and 150m temperatures.
+
+First get the annual and seasonal means.
+```{r}
+nemo_means <- nemo_ssts %>%
+  group_by(run_loc,site_lat,site_lon,speed) %>%
+  summarise(ann_sst = mean(endpt_sst),
+            ann_deep_sst = mean(deep_sst),
+            mean_dist = mean(dist_final),
+            mean_deep_dist = mean(dist_150m))
+
+nemo_nov_may <- nemo_ssts %>%
+  filter(months_end %in% c(11,12,1,2,3,4,5)) %>%
+  group_by(run_loc,site_lat,site_lon,speed) %>%
+  summarise(nov_may_sst = mean(endpt_sst),
+            nov_may_deep = mean(deep_sst),
+            mean_dist = mean(dist_final),
+            mean_deep_dist = mean(dist_150m))
+
+site_ssts_nemo <- site_ssts_nemo %>%
+    transform(endpt_sst = as.numeric(endpt_sst),
+            deep_sst = as.numeric(deep_sst))
+
+nemo_site_ann <- site_ssts_nemo %>%
+  group_by(run_loc,site_lat,site_lon) %>%
+  summarise(ann_site_sst = mean(endpt_sst),
+            ann_site_deep_sst = mean(deep_sst))
+
+nemo_site_nov_may <- site_ssts_nemo %>%
+  filter(months_end %in% c(11,12,1,2,3,4,5)) %>%
+  group_by(run_loc,site_lat,site_lon) %>%
+  summarise(nov_may_site_sst = mean(endpt_sst),
+            nov_may_site_deep = mean(deep_sst))
+```
+
+
+Match up the tables so site and endpoint are in the same table
+```{r}
+nemo_means_all <- left_join(nemo_means,nemo_site_ann, by = "run_loc")
+nemo_nov_may_all <- left_join(nemo_nov_may, nemo_site_nov_may, by = "run_loc")
+
+```
+
+
+
+
+
+Now calculate the offset, (end - site)
+```{r}
+nemo_mean_offset <- nemo_means_all %>%
+  mutate(offset_ann_sst = ann_sst - ann_site_sst,
+         offset_ann_deep = ann_deep_sst - ann_site_deep_sst)
+
+nemo_nov_may_offset <- nemo_nov_may_all %>%
+  mutate(offset_nov_may_sst = nov_may_sst - nov_may_site_sst,
+         offset_nov_may_deep = nov_may_deep - nov_may_site_deep)
+```
+
+
+
+
+
+Match the site IDs, run IDs, and get proxy-based subsets
+```{r}
+uk_ssts_ann_nemo <- left_join(uk_sites, nemo_mean_offset, by = "run_loc")
+tex_ssts_ann_nemo <- left_join(tex_sites, nemo_mean_offset, by = "run_loc")
+d18O_ssts_ann_nemo <- left_join(d18O_sites, nemo_mean_offset, by = "run_loc")
+uk_ssts_nov_may_nemo <- left_join(uk_sites, nemo_nov_may_offset, by = "run_loc")
+
+uk37_ann_nemo_results <- left_join(uk_ssts_ann_nemo, uk37_coretop, by = c("UK37_ID"))
+tex86_ann_nemo_results <- left_join(tex_ssts_ann_nemo, tex86_coretop, by = c("TEX86_ID"))
+d18O_ann_nemo_results <- left_join(d18O_ssts_ann_nemo, d18O_coretop, by = c("foram_d18O_ID"))
+uk37_nov_may_nemo_results <- left_join(uk_ssts_nov_may_nemo, uk37_coretop, by = c("UK37_ID"))
+```
+
+
+
+
+
+
+
+
+
+Calculate the proxy offsets
+```{r}
+uk37_ann_nemo_results <- uk37_ann_nemo_results %>%
+  mutate(proxy_offset = uk37_sst - ann_sst,
+         proxy_offset_site = uk37_sst - ann_site_sst)
+
+tex86_ann_nemo_results <- tex86_ann_nemo_results %>%
+  mutate(proxy_offset_sst = tex86_sst - ann_sst,
+         proxy_offset_deep = tex86_sst - ann_deep_sst,
+         proxy_offset_site_sst = tex86_sst - ann_site_sst,
+         proxy_offset_site_deep = tex86_sst - ann_site_deep_sst)
+
+uk37_nov_may_nemo_results <- uk37_nov_may_nemo_results %>%
+  mutate(proxy_offset_nov_may = uk37_sst - nov_may_sst,
+         proxy_offset_nov_may_site = uk37_sst - nov_may_site_sst)
+```
+
+
+
+
+
+
+
+Get things ready for plotting in python
+
+
+```{r}
+uk37_ann_nemo_wider <- select(uk37_ann_nemo_results, c("Location_key", "Latitude", "Longitude", "speed","ann_site_sst","uk37_sst","proxy_offset_site","ann_sst","mean_dist", "offset_ann_sst","proxy_offset")) %>%
+  pivot_wider(names_from = c(speed), values_from = c("ann_sst":"proxy_offset"))
+
+
+tex86_ann_nemo_wider <- select(tex86_ann_nemo_results, c("Location_key", "Latitude", "Longitude", "speed","ann_sst":"mean_deep_dist","ann_site_sst":"offset_ann_deep","tex86_sst":"proxy_offset_site_deep")) %>%
+  pivot_wider(names_from = c(speed), values_from = c("ann_sst":"mean_deep_dist","offset_ann_sst":"offset_ann_deep","proxy_offset_sst","proxy_offset_deep"))
+
+uk37_nov_may_nemo_wider <- select(uk37_nov_may_nemo_results, c("Location_key", "Latitude", "Longitude","uk37_sst","nov_may_site_sst","proxy_offset_nov_may_site", "speed","nov_may_sst","mean_dist","offset_nov_may_sst","proxy_offset_nov_may")) %>%
+  pivot_wider(names_from = c(speed), values_from = c("nov_may_sst":"proxy_offset_nov_may"))
+
+```
+
+
+
+
+Export to csv
+```{r}
+write_csv(uk37_ann_nemo_wider,"uk37_ann_nemo_to_plot.csv")
+write_csv(tex86_ann_nemo_wider,"tex86_ann_nemo_to_plot.csv")
+
+write_csv(uk37_nov_may_nemo_wider,"uk37_nov_may_nemo_to_plot.csv")
+```
+
+
+
+
+
+
+Plots?
+
+Get all the uk37 stuff into one spot first
+```{r}
+
+uk37_all_nemo <- left_join(
+  select(uk37_ann_nemo_results,c(
+    Location_key, Latitude, Longitude, speed, ann_sst, mean_dist, ann_site_sst, offset_ann_sst, wdepth, uk37_sst, proxy_offset, proxy_offset_site
+  )), 
+  select(uk37_nov_may_nemo_results,c(
+    Location_key, speed, mean_dist, nov_may_site_sst, nov_may_sst, offset_nov_may_sst, proxy_offset_nov_may, proxy_offset_nov_may_site
+  )), 
+  by = c("Location_key","speed"))
+
+uk37_all_nemo <- uk37_all_nemo %>%
+  rename(mean_dist_ann = mean_dist.x,
+         mean_dist_nov_may = mean_dist.y) 
+  
+```
+
+
+
+
+
+Write everything to csv for plotting in a different script
+```{r}
+write_csv(uk37_all_nemo,"uk37_results_datatable.csv")
+write_csv(tex86_ann_nemo_results, "tex86_results_datatable.csv")
+
+write_csv(nemo_mean_offset,"nemo_mean_ann_results.csv")
+write_csv(nemo_nov_may_offset,"nemo_nov_may_results.csv")
+
+write_csv(nemo_ssts,"nemo_results_traj.csv")
+```
+
+
+
+Plot some stuff
+```{r}
+uk37_plots <- uk37_all_nemo %>%
+  transform(speed = gsub("^.{0,3}", "", speed)) %>%
+  transform(speed = as.numeric(speed))%>%
+  factor(speed, levels = speed[order(speed)]) %>%
+  ggplot(aes(x = offset_nov_may_sst,
+    y = proxy_offset_nov_may_site,
+    color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "YlOrRd")
+
+uk37_plots
+
+#ggsave("seasonal transport bias vs uk37 seasonal offset.pdf", uk37_plots)
+```
+
+
+
+
+
+
+```{r}
+uk37_dist_plot <- uk37_all_nemo %>%
+  ggplot(aes(x = mean_dist_nov_may,
+    y = proxy_offset_nov_may_site,
+    color = speed)) +
+  geom_point()
+
+uk37_dist_plot
+
+ggsave("seasonal transport distance vs uk37 seasonal offset.pdf", uk37_plots)
+```
+
+
+```{r}
+uk37_plots <- uk37_all_nemo %>%
+  filter(wdepth > 500) %>%
+  ggplot(aes(x = offset_nov_may_sst,
+    y = proxy_offset_nov_may_site,
+    color = speed)) +
+  geom_point()
+
+uk37_plots
+
+ggsave("seasonal transport bias vs uk37 seasonal offset - sites over 500m depth.pdf", uk37_plots)
+```
+
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("transport bias vs tex86 offset.pdf",tex86_offset_plot)
+```
+
+
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  ggplot(aes(x = mean_dist,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("travel distance vs tex86 offset.pdf",tex86_offset_plot)
+```
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(water_depth > 1000) %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot)
+```
+
+
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(water_depth > 1000) %>%
+  ggplot(aes(x = mean_dist,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("travel distance vs tex86 offset - only deep sites.pdf",tex86_offset_plot)
+```
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = water_depth)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("modeled vs tex86 offset - sp6.pdf",tex86_offset_plot)
+```
+
+
+
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(x = mean_dist,
+             y = proxy_offset_site_sst,
+             color = water_depth)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("travel dist vs tex86 offset - sp6.pdf",tex86_offset_plot)
+```
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(x = water_depth,
+             y = ann_sst,
+             color = offset_ann_sst)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("water depth vs annual sst - tex sites.pdf",tex86_offset_plot)
+```
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(speed == "Sp_6") %>%
+  filter(water_depth > 500) %>%
+  ggplot(aes(x = ann_sst,
+             y = tex86_sst)) +
+  geom_point()
+
+tex86_offset_plot
+
+ggsave("annual sst vs tex86 - shallow sites.pdf",tex86_offset_plot)
+
+```
+
+
+
+Try using the relation from Kim et al. (2015) fitted to MS and RS data:
+
+T = 56.3 * TEX + 30.2 (Kim et al. 2015 eq. 4)
+
+```{r}
+tex_kim_cal <- tex86_ann_nemo_results %>%
+  mutate(sst_tex_kim = 56.3*log10(TEX86) + 30.2) %>%
+  mutate(site_offset_kim = sst_tex_kim - ann_site_sst)
+```
+
+
+Plot it up!
+```{r}
+
+
+tex86_offset_kim_plot <- tex_kim_cal %>%
+  rename(water_depth = "site depth (m)") %>%
+  filter(speed == "Sp_6") %>%
+  filter(water_depth > 1000) %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = site_offset_kim)) +
+  geom_point() +
+  stat_smooth(method = "lm")
+
+tex86_offset_kim_plot
+
+#ggsave("modeled vs tex86 offset - sp6.pdf",tex86_offset_plot)
+```
+
+
+
+```{r}
+write_csv(tex_kim_cal, "kim_2015_cal.csv")
+```
+
+
+
+
