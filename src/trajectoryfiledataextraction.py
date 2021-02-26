@@ -31,8 +31,7 @@ data_file_path = '../data/raw/'
 
 
 # csv with the list of batches and sinking speeds
-full_run_list = pd.read_csv(data_file_path+'batch_runs_test.csv')
-# for the reproducibility test run, we're just looking at batch 6 and all(1000)
+full_run_list = pd.read_csv(data_file_path+'batch_runs.csv')
 
 
 # list of sinking speeds and dictionary to connect the csv file with the nc
