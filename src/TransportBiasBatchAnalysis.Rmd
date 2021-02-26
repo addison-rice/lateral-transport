@@ -3,7 +3,9 @@ title: "Transport bias from batch runs"
 output: html_notebook
 ---
 
-New version of the transport bias analysis to account for the lack of site IDs in the batch output files and just make sure things are relatively clean.
+Takes in the output file from trajectoryfiledataextraction.py, the proxy database that matches up the model run locations with associated and nearby proxy data, and the information on coretop proxy data.
+
+Outputs files that are then used for plotting scripts and summary tables.
 
 
 ```{r}
@@ -15,16 +17,12 @@ library(tidyverse)
 
 Load:
     the database that lists all sites and their associated proxies
-    the batch runs file
     the file with extracted trajectory endpoint information
     files with the core-top data for each proxy
 
 ```{r}
 proxy_db <- read_csv('../data/raw/Sediment_Locations.csv')
-
-sites_run <- read_csv('../data/raw/batch_runs.csv')
-
-sst_data <- read_csv('../data/temp/extracted_data.csv')
+sst_data <- read_csv('../data/processed/extracted_trajectory_info.csv')
 
 
 uk37_coretop <- read_csv('../data/raw/uk37_table.csv')
