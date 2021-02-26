@@ -16,7 +16,7 @@ library(tidyverse)
 Load:
     the database that lists all sites and their associated proxies
     the batch runs file
-    the csv files with climatology SSTs.
+    the file with extracted trajectory endpoint information
     files with the core-top data for each proxy
 
 ```{r}
@@ -26,9 +26,7 @@ sites_run <- read_csv('../data/raw/batch_runs.csv')
 
 sst_data <- read_csv('../data/temp/extracted_data.csv')
 
-#site_ssts_nemo <- read_csv('/home/addison/Documents/School/Utrecht/site_ssts_1000.csv')
 
-# For now, just UK37, TEX86, and foram d18O
 uk37_coretop <- read_csv('../data/raw/uk37_table.csv')
 tex86_coretop <- read_csv('../data/raw/tex_table.csv')
 d18O_coretop <- read_csv('../data/raw/d18O_table.csv')
@@ -46,111 +44,22 @@ run_locs <- proxy_db %>%
   
 sst_data <- left_join(sst_data, run_locs, by = c("site_lat" = "Latitude", "site_lon" = "Longitude"))
 
-#site_ssts_nemo <- left_join(site_ssts_nemo, run_locs, by = c("site_lat" = "Latitude", "site_lon" = "Longitude"))
-```
-
-
-Since not all of the site IDs made a match, I'll export and do the rest in excel, then load it back in.
-```{r}
-write_csv(sst_data,"sst_data_to_match_sites.csv")
-write_csv(site_ssts_nemo,"site_sst_data_to_match_sites.csv")
-
 ```
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-Now bring it back in...
-```{r}
-sst_data <- read_csv('/home/addison/Documents/School/Utrecht/sst_data_matched_sites.csv')
-
-site_ssts_nemo <- read_csv('/home/addison/Documents/School/Utrecht/site_sst_data_matched_sites.csv')
-
-```
-
-
-
-Let's figure out how to get the lists of monthly ssts into number format
-```{r}
-months <- c('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')
-sst_data <- sst_data %>%
-  separate('site_sst_61-90', paste('sitesst_61_90',months,sep = '_'),",") %>%
-  separate('site_sst_71-00', paste('sitesst_71_00',months,sep = '_'),",") %>%
-  separate('end_sst_61-90', paste('endsst_61_90',months,sep = '_'),",") %>%
-  separate('end_sst_71-00', paste('endsst_71_00',months,sep = '_'),",")
-```
-
-
-Separate the climatology SSTs and the NEMO SSTs for two separate analyses.
-
-Pivot the climatological ssts and make them numeric.
-```{r}
-clim_ssts <- sst_data %>%
-  select(c(speed:end_lon,dist_final,sitesst_61_90_Jan:endsst_71_00_Dec,months_end,years_end,run_loc)) %>%
-  pivot_longer(
-    cols = sitesst_61_90_Jan:endsst_71_00_Dec,
-    names_to = c("location","sst_dataset","month"),
-    names_pattern = "(.*)(sst_.._..)_(...)",
-    values_to = "clim_sst"
-  ) %>%
-  transform(clim_sst = as.numeric(clim_sst))
-```
-
-
-Grab the NEMO SSTs and make sure the deep data is numeric.
+Make sure the deep data is numeric.
 ```{r}
 nemo_ssts <- sst_data %>%
-  select(c(speed:dist_150m,endpt_sst:run_loc)) %>%
   transform(endpt_sst = as.numeric(endpt_sst),
             deep_sst = as.numeric(deep_sst))
 ```
 
 
 
-
-Calculate the seasonal and annual SSTs
-```{r}
-clim_means <- clim_ssts %>%
-  group_by(run_loc,site_lat,site_lon,location,speed,sst_dataset) %>%
-  summarise(ann_sst = mean(clim_sst))
-
-clim_nov_may <- clim_ssts %>%
-  filter(month %in% c('Nov','Dec','Jan','Feb','Mar','Apr','May')) %>%
-  group_by(run_loc,site_lat,site_lon,location,speed,sst_dataset) %>%
-  summarise(nov_may_sst = mean(clim_sst))
-```
-
-
-Now calculate the offset, (end - site)
-```{r}
-clim_mean_offset <- clim_means %>%
-  pivot_wider(names_from = c(location,sst_dataset),
-              values_from = ann_sst) %>%
-  mutate(offset_ann_61_90 = end_sst_61_90 - site_sst_61_90,
-         offset_ann_71_00 = end_sst_71_00 - site_sst_71_00)
-
-clim_nov_may_offset <- clim_nov_may %>%
-  pivot_wider(names_from = c(location,sst_dataset),
-              values_from = nov_may_sst) %>%
-  mutate(offset_nov_may_61_90 = end_sst_61_90 - site_sst_61_90,
-         offset_nov_may_71_00 = end_sst_71_00 - site_sst_71_00)
-```
-
-
-
-
-
-Now we can calculate the proxy-based SSTs for comparison.
+Calculate the proxy-based SSTs for comparison with the site and trajectory endpoint information.
 
 UK37: T = (UK37 - 0.039)/0.034 (Prahl et al. 1988)
 
@@ -173,83 +82,13 @@ Match the site IDs, run IDs, and get proxy-based subsets
 uk_sites <- filter(proxy_db, (!is.na(proxy_db$UK37_ID)))
 tex_sites <- filter(proxy_db,(!is.na(proxy_db$TEX86_ID)))
 d18O_sites <- filter(proxy_db,(!is.na(proxy_db$foram_d18O_ID)))
-
-uk_ssts_ann <- left_join(uk_sites, clim_mean_offset, by = "run_loc")
-tex_ssts_ann <- left_join(tex_sites, clim_mean_offset, by = "run_loc")
-d18O_ssts_ann <- left_join(d18O_sites, clim_mean_offset, by = "run_loc")
-uk_ssts_nov_may <- left_join(uk_sites, clim_nov_may_offset, by = "run_loc")
-
-uk37_ann_results <- left_join(uk_ssts_ann, uk37_coretop, by = c("UK37_ID"))
-tex86_ann_results <- left_join(tex_ssts_ann, tex86_coretop, by = c("TEX86_ID"))
-d18O_ann_results <- left_join(d18O_ssts_ann, d18O_coretop, by = c("foram_d18O_ID"))
-uk37_nov_may_results <- left_join(uk_ssts_nov_may, uk37_coretop, by = c("UK37_ID"))
 ```
 
 
 
 
 
-
-
-
-
-Calculate the proxy offsets
-```{r}
-uk37_ann_results <- uk37_ann_results %>%
-  mutate(proxy_offset_61_90 = uk37_sst - end_sst_61_90,
-         proxy_offset_71_00 = uk37_sst - end_sst_71_00,
-         proxy_offset_site_61_90 = uk37_sst - site_sst_61_90,
-         proxy_offset_site_71_00 = uk37_sst - site_sst_71_00)
-
-tex86_ann_results <- tex86_ann_results %>%
-  mutate(proxy_offset_61_90 = tex86_sst - end_sst_61_90,
-         proxy_offset_71_00 = tex86_sst - end_sst_71_00,
-         proxy_offset_site_61_90 = tex86_sst - site_sst_61_90,
-         proxy_offset_site_71_00 = tex86_sst - site_sst_71_00)
-
-uk37_nov_may_results <- uk37_nov_may_results %>%
-  mutate(proxy_offset_61_90 = uk37_sst - end_sst_61_90,
-         proxy_offset_71_00 = uk37_sst - end_sst_71_00,
-         proxy_offset_site_61_90 = uk37_sst - site_sst_61_90,
-         proxy_offset_site_71_00 = uk37_sst - site_sst_71_00)
-```
-
-
-
-
-
-
-
-Get things ready for plotting in python
-```{r}
-uk37_ann_wider <- select(uk37_ann_results, c("Location_key", "Latitude", "Longitude", "speed":"offset_ann_71_00", "uk37_sst":"proxy_offset_site_71_00")) %>%
-  pivot_wider(names_from = c(speed), values_from = c(end_sst_61_90:offset_ann_71_00,proxy_offset_61_90,proxy_offset_71_00))
-
-
-tex86_ann_wider <- select(tex86_ann_results, c("Location_key", "Latitude", "Longitude", "speed":"offset_ann_71_00", "tex86_sst":"proxy_offset_site_71_00")) %>%
-  pivot_wider(names_from = c(speed), values_from = c(end_sst_61_90:offset_ann_71_00,proxy_offset_61_90,proxy_offset_71_00))
-
-uk37_nov_may_wider <- select(uk37_nov_may_results, c("Location_key", "Latitude", "Longitude", "speed":"offset_nov_may_71_00", "uk37_sst":"proxy_offset_site_71_00")) %>%
-  pivot_wider(names_from = c(speed), values_from = c(end_sst_61_90:offset_nov_may_71_00,proxy_offset_61_90,proxy_offset_71_00))
-
-```
-
-
-
-
-Export to csv
-```{r}
-write_csv(uk37_ann_wider,"uk37_ann_clim_to_plot.csv")
-write_csv(tex86_ann_wider,"tex86_ann_clim_to_plot.csv")
-
-write_csv(uk37_nov_may_wider,"uk37_nov_may_clim_to_plot.csv")
-```
-
-
-
-Now do the same for the NEMO ssts and 150m temperatures.
-
-First get the annual and seasonal means.
+Now get the annual and seasonal means .
 ```{r}
 nemo_means <- nemo_ssts %>%
   group_by(run_loc,site_lat,site_lon,speed) %>%
