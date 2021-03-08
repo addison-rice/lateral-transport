@@ -47,7 +47,6 @@ sst_data <- left_join(sst_data, run_locs, by = c("site_lat" = "Latitude", "site_
 
 
 
-
 Make sure the deep data is numeric.
 ```{r}
 nemo_ssts <- sst_data %>%
@@ -75,7 +74,7 @@ tex86_coretop <- tex86_coretop %>%
 
 
 
-Match the site IDs, run IDs, and get proxy-based subsets
+Get proxy-based subsets for matching up with the NEMO data
 ```{r}
 uk_sites <- filter(proxy_db, (!is.na(proxy_db$UK37_ID)))
 tex_sites <- filter(proxy_db,(!is.na(proxy_db$TEX86_ID)))
@@ -113,15 +112,40 @@ nemo_nov_may <- nemo_ssts %>%
 
 Now calculate the offset, (end - site), where site is represented by the 1000 m/d sinking speed
 
-Might have to pivot wider on speed, then calculate the offsets, then pivot longer again? Any way to make a column for the 1000 m/d sinking speed?
+Filter the data to make separate tables for the site (1000 m/d) data, then add column for site data to the data table, then calculate the offset.
+```{r}
+site_mean_ann <- nemo_means %>%
+  filter(speed == "Sp_1000") %>%
+  select(run_loc, ann_sst, ann_deep_sst) %>%
+  rename(site_sst = ann_sst,
+         site_deep_sst = ann_deep_sst)
+
+site_nov_may <- nemo_nov_may %>%
+  filter(speed == "Sp_1000") %>%
+  select(run_loc, nov_may_sst, nov_may_deep) %>%
+  rename(site_nov_may_sst = nov_may_sst,
+         site_deep_nov_may_sst = nov_may_deep)
+
+```
+
+
+
+```{r}
+nemo_means_all <- left_join(nemo_means, site_mean_ann, by = "run_loc")
+
+nemo_nov_may_all <- left_join(nemo_nov_may, site_nov_may, by = "run_loc")
+```
+
+
+
 ```{r}
 nemo_mean_offset <- nemo_means_all %>%
-  mutate(offset_ann_sst = ann_sst - ann_site_sst,
-         offset_ann_deep = ann_deep_sst - ann_site_deep_sst)
+  mutate(offset_ann_sst = ann_sst - site_sst,
+         offset_ann_deep = ann_deep_sst - site_deep_sst)
 
 nemo_nov_may_offset <- nemo_nov_may_all %>%
-  mutate(offset_nov_may_sst = nov_may_sst - nov_may_site_sst,
-         offset_nov_may_deep = nov_may_deep - nov_may_site_deep)
+  mutate(offset_nov_may_sst = nov_may_sst - site_nov_may_sst,
+         offset_nov_may_deep = nov_may_deep - site_deep_nov_may_sst)
 ```
 
 
@@ -153,17 +177,17 @@ Calculate the proxy offsets
 ```{r}
 uk37_ann_nemo_results <- uk37_ann_nemo_results %>%
   mutate(proxy_offset = uk37_sst - ann_sst,
-         proxy_offset_site = uk37_sst - ann_site_sst)
+         proxy_offset_site = uk37_sst - site_sst)
 
 tex86_ann_nemo_results <- tex86_ann_nemo_results %>%
   mutate(proxy_offset_sst = tex86_sst - ann_sst,
          proxy_offset_deep = tex86_sst - ann_deep_sst,
-         proxy_offset_site_sst = tex86_sst - ann_site_sst,
-         proxy_offset_site_deep = tex86_sst - ann_site_deep_sst)
+         proxy_offset_site_sst = tex86_sst - site_sst,
+         proxy_offset_site_deep = tex86_sst - site_deep_sst)
 
 uk37_nov_may_nemo_results <- uk37_nov_may_nemo_results %>%
   mutate(proxy_offset_nov_may = uk37_sst - nov_may_sst,
-         proxy_offset_nov_may_site = uk37_sst - nov_may_site_sst)
+         proxy_offset_nov_may_site = uk37_sst - site_nov_may_sst)
 ```
 
 
@@ -176,14 +200,14 @@ Get things ready for plotting in python
 
 
 ```{r}
-uk37_ann_nemo_wider <- select(uk37_ann_nemo_results, c("Location_key", "Latitude", "Longitude", "speed","ann_site_sst","uk37_sst","proxy_offset_site","ann_sst","mean_dist", "offset_ann_sst","proxy_offset")) %>%
+uk37_ann_nemo_wider <- select(uk37_ann_nemo_results, c("Location_key", "Latitude", "Longitude", "speed","site_sst","uk37_sst","proxy_offset_site","ann_sst","mean_dist", "offset_ann_sst","proxy_offset")) %>%
   pivot_wider(names_from = c(speed), values_from = c("ann_sst":"proxy_offset"))
 
 
-tex86_ann_nemo_wider <- select(tex86_ann_nemo_results, c("Location_key", "Latitude", "Longitude", "speed","ann_sst":"mean_deep_dist","ann_site_sst":"offset_ann_deep","tex86_sst":"proxy_offset_site_deep")) %>%
+tex86_ann_nemo_wider <- select(tex86_ann_nemo_results, c("Location_key", "Latitude", "Longitude", "speed","ann_sst":"mean_deep_dist","site_sst":"offset_ann_deep","tex86_sst":"proxy_offset_site_deep")) %>%
   pivot_wider(names_from = c(speed), values_from = c("ann_sst":"mean_deep_dist","offset_ann_sst":"offset_ann_deep","proxy_offset_sst","proxy_offset_deep"))
 
-uk37_nov_may_nemo_wider <- select(uk37_nov_may_nemo_results, c("Location_key", "Latitude", "Longitude","uk37_sst","nov_may_site_sst","proxy_offset_nov_may_site", "speed","nov_may_sst","mean_dist","offset_nov_may_sst","proxy_offset_nov_may")) %>%
+uk37_nov_may_nemo_wider <- select(uk37_nov_may_nemo_results, c("Location_key", "Latitude", "Longitude","uk37_sst","site_nov_may_sst","proxy_offset_nov_may_site", "speed","nov_may_sst","mean_dist","offset_nov_may_sst","proxy_offset_nov_may")) %>%
   pivot_wider(names_from = c(speed), values_from = c("nov_may_sst":"proxy_offset_nov_may"))
 
 ```
@@ -193,10 +217,10 @@ uk37_nov_may_nemo_wider <- select(uk37_nov_may_nemo_results, c("Location_key", "
 
 Export to csv
 ```{r}
-write_csv(uk37_ann_nemo_wider,"uk37_ann_nemo_to_plot.csv")
-write_csv(tex86_ann_nemo_wider,"tex86_ann_nemo_to_plot.csv")
+write_csv(uk37_ann_nemo_wider,"../data/temp/uk37_ann_nemo_to_plot.csv")
+write_csv(tex86_ann_nemo_wider,"../data/temp/tex86_ann_nemo_to_plot.csv")
 
-write_csv(uk37_nov_may_nemo_wider,"uk37_nov_may_nemo_to_plot.csv")
+write_csv(uk37_nov_may_nemo_wider,"../data/temp/uk37_nov_may_nemo_to_plot.csv")
 ```
 
 
@@ -211,10 +235,10 @@ Get all the uk37 stuff into one spot first
 
 uk37_all_nemo <- left_join(
   select(uk37_ann_nemo_results,c(
-    Location_key, Latitude, Longitude, speed, ann_sst, mean_dist, ann_site_sst, offset_ann_sst, wdepth, uk37_sst, proxy_offset, proxy_offset_site
+    Location_key, Latitude, Longitude, speed, ann_sst, mean_dist, site_sst, offset_ann_sst, wdepth, uk37_sst, proxy_offset, proxy_offset_site
   )), 
   select(uk37_nov_may_nemo_results,c(
-    Location_key, speed, mean_dist, nov_may_site_sst, nov_may_sst, offset_nov_may_sst, proxy_offset_nov_may, proxy_offset_nov_may_site
+    Location_key, speed, mean_dist, site_nov_may_sst, nov_may_sst, offset_nov_may_sst, proxy_offset_nov_may, proxy_offset_nov_may_site
   )), 
   by = c("Location_key","speed"))
 
@@ -230,14 +254,25 @@ uk37_all_nemo <- uk37_all_nemo %>%
 
 Write everything to csv for plotting in a different script
 ```{r}
-write_csv(uk37_all_nemo,"uk37_results_datatable.csv")
-write_csv(tex86_ann_nemo_results, "tex86_results_datatable.csv")
+write_csv(uk37_all_nemo,"../data/temp/uk37_results_datatable.csv")
+write_csv(tex86_ann_nemo_results, "../data/temp/tex86_results_datatable.csv")
 
-write_csv(nemo_mean_offset,"nemo_mean_ann_results.csv")
-write_csv(nemo_nov_may_offset,"nemo_nov_may_results.csv")
+write_csv(nemo_mean_offset,"../data/temp/nemo_mean_ann_results.csv")
+write_csv(nemo_nov_may_offset,"../data/temp/nemo_nov_may_results.csv")
 
-write_csv(nemo_ssts,"nemo_results_traj.csv")
+write_csv(nemo_ssts,"../data/temp/nemo_results_traj.csv")
 ```
+
+
+
+
+
+Move all this to another spot
+
+
+
+
+
 
 
 
