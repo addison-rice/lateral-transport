@@ -274,8 +274,11 @@ Write everything to csv for plotting in a different script
 write_csv(uk37_all_nemo,"../data/temp/uk37_results_datatable.csv")
 write_csv(tex86_ann_nemo_results, "../data/temp/tex86_results_datatable.csv")
 
-write_csv(nemo_mean_offset_wider,"../data/temp/nemo_mean_ann_results.csv")
-write_csv(nemo_nov_may_offset_wider,"../data/temp/nemo_nov_may_results.csv")
+write_csv(nemo_mean_offset_wider,"../data/temp/nemo_mean_ann_results_wider.csv")
+write_csv(nemo_nov_may_offset_wider,"../data/temp/nemo_nov_may_results_wider.csv")
+
+write_csv(nemo_mean_offset,"../data/temp/nemo_mean_ann_results.csv")
+write_csv(nemo_nov_may_offset,"../data/temp/nemo_nov_may_results.csv")
 
 write_csv(nemo_ssts,"../data/temp/nemo_results_traj.csv")
 ```
