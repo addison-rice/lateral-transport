@@ -250,6 +250,19 @@ uk37_all_nemo <- uk37_all_nemo %>%
 
 
 
+Pivot wider on the nemo sst tables for easy plotting in the python notebook
+```{r}
+nemo_mean_offset_wider <- nemo_mean_offset %>%
+  pivot_wider(names_from = c(speed),
+              values_from = c(mean_dist, mean_deep_dist, offset_ann_sst, offset_ann_deep))
+
+nemo_nov_may_offset_wider <- nemo_nov_may_offset %>%
+  pivot_wider(names_from = c(speed),
+              values_from = c(mean_dist, mean_deep_dist, offset_nov_may_sst, offset_nov_may_deep))
+```
+
+
+
 
 
 Write everything to csv for plotting in a different script
@@ -257,8 +270,8 @@ Write everything to csv for plotting in a different script
 write_csv(uk37_all_nemo,"../data/temp/uk37_results_datatable.csv")
 write_csv(tex86_ann_nemo_results, "../data/temp/tex86_results_datatable.csv")
 
-write_csv(nemo_mean_offset,"../data/temp/nemo_mean_ann_results.csv")
-write_csv(nemo_nov_may_offset,"../data/temp/nemo_nov_may_results.csv")
+write_csv(nemo_mean_offset_wider,"../data/temp/nemo_mean_ann_results.csv")
+write_csv(nemo_nov_may_offset_wider,"../data/temp/nemo_nov_may_results.csv")
 
 write_csv(nemo_ssts,"../data/temp/nemo_results_traj.csv")
 ```
