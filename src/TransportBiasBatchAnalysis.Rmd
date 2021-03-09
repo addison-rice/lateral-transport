@@ -253,10 +253,14 @@ uk37_all_nemo <- uk37_all_nemo %>%
 Pivot wider on the nemo sst tables for easy plotting in the python notebook
 ```{r}
 nemo_mean_offset_wider <- nemo_mean_offset %>%
+  rename("Latitude" = "site_lat.x", "Longitude" = "site_lon.x") %>%
+  select(c(run_loc, Latitude, Longitude, speed, mean_dist:offset_ann_deep)) %>%
   pivot_wider(names_from = c(speed),
               values_from = c(mean_dist, mean_deep_dist, offset_ann_sst, offset_ann_deep))
 
 nemo_nov_may_offset_wider <- nemo_nov_may_offset %>%
+  rename("Latitude" = "site_lat.x", "Longitude" = "site_lon.x") %>%
+  select(c(run_loc, Latitude, Longitude, speed, mean_dist:offset_nov_may_deep)) %>%
   pivot_wider(names_from = c(speed),
               values_from = c(mean_dist, mean_deep_dist, offset_nov_may_sst, offset_nov_may_deep))
 ```
