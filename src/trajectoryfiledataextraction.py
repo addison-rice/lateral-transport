@@ -326,7 +326,7 @@ for run_loc in full_run_list.index:
             deep_lat_lon = [lats_150[speed_index][trajectory],
                             lons_150[speed_index][trajectory]]
             
-            water_depth = batch_water_depth[trajectory][0]
+            water_depth = batch_water_depth[trajectory][1]
             
             # calculate the distance from the starting point for each trajectory
             dist_final = distance(site_lat_lon, final_lat_lon)
