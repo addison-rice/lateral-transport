@@ -11,16 +11,21 @@ Notebook for making pretty figures from the lateral transport study.
 
 ```{r}
 library(tidyverse)
+library(ggmap)
+library(cmocean)
 ```
 
 
 Load data output from the batch analysis code.
 ```{r}
-nemo_results_traj <- read_csv("nemo_results_traj.csv")
-nemo_mean_ann_results <- read_csv("nemo_mean_ann_results.csv")
-nemo_nov_may_results <- read_csv("nemo_nov_may_results.csv")
-uk37_results_datatable <-read_csv("uk37_results_datatable.csv")
-tex86_results_datatable <- read_csv("tex86_results_datatable.csv")
+
+nemo_results_traj <- read_csv("../data/temp/nemo_results_traj.csv")
+nemo_mean_ann_results <- read_csv("../data/temp/nemo_mean_ann_results.csv")
+nemo_nov_may_results <- read_csv("../data/temp/nemo_nov_may_results.csv")
+uk37_results_datatable <-read_csv("../data/temp/uk37_results_datatable.csv")
+tex86_results_datatable <- read_csv("../data/temp/tex86_results_datatable.csv")
+
+seas_matchup <- read.csv("../data/raw/Sediment_Locations_seas.csv")
 ```
 
 Let's start by plotting transport distance and temperature offsets, maybe in jitter plots?
@@ -55,6 +60,72 @@ plot2 <- uk37_results_datatable %>%
 
 plot2
 ```
+
+Let's check to make sure the binning into subbasins worked correctly.
+```{r}
+seas_nemo_results <- left_join(nemo_mean_ann_results, select(seas_matchup, c(Location_key, Subbasin)), by = c("run_loc" = "Location_key"))
+```
+
+```{r}
+seas_check <- seas_nemo_results %>%
+  ggplot(aes(
+    x = site_lon,
+    y = site_lat,
+    color = Subbasin
+  )) +
+  geom_point() +
+  annotation_map(map_data("world")) +
+  coord_fixed()
+
+seas_check
+
+ggsave("../results/figures/subbasin_map.eps")
+```
+
+
+```{r}
+depth_dist_seas <- seas_nemo_results %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(
+    x = water_depth,
+    y = mean_dist,
+    color = Subbasin
+  )) +
+  geom_point()
+
+depth_dist_seas
+
+ggsave("../results/figures/depth_dist_subbasin.eps")
+```
+
+```{r}
+depth_offset_seas <- seas_nemo_results %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(
+    x = water_depth,
+    y = offset_ann_sst,
+    color = Subbasin
+  )) +
+  geom_point()
+
+depth_offset_seas
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
