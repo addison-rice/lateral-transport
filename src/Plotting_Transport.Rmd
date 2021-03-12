@@ -28,6 +28,43 @@ tex86_results_datatable <- read_csv("../data/temp/tex86_results_datatable.csv")
 seas_matchup <- read.csv("../data/raw/Sediment_Locations_seas.csv")
 ```
 
+
+
+Make the sinking speed into a factor and in the right order
+```{r}
+uk37_results_datatable <- uk37_results_datatable %>%
+  transform(speed = gsub("^.{0,3}", "", speed)) %>%
+  transform(speed = as.numeric(speed)) %>%
+  filter(speed < 1000) %>%
+  transform(speed = as.factor(speed))
+
+tex86_results_datatable <- tex86_results_datatable %>%
+  transform(speed = gsub("^.{0,3}", "", speed)) %>%
+  transform(speed = as.numeric(speed)) %>%
+  filter(speed < 1000) %>%
+  transform(speed = as.factor(speed))
+```
+
+
+Match the keys for subbasin analysis
+```{r}
+seas_nemo_results <- left_join(nemo_mean_ann_results, select(seas_matchup, c(Location_key, Subbasin)), by = c("run_loc" = "Location_key"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Let's start by plotting transport distance and temperature offsets, maybe in jitter plots?
 ```{r}
 plot1 <- nemo_mean_ann_results %>%
@@ -61,10 +98,6 @@ plot2 <- uk37_results_datatable %>%
 plot2
 ```
 
-Let's check to make sure the binning into subbasins worked correctly.
-```{r}
-seas_nemo_results <- left_join(nemo_mean_ann_results, select(seas_matchup, c(Location_key, Subbasin)), by = c("run_loc" = "Location_key"))
-```
 
 ```{r}
 seas_check <- seas_nemo_results %>%
@@ -113,6 +146,154 @@ depth_offset_seas
 
 
 
+
+```{r}
+uk37_plots <- uk37_results_datatable %>%
+  ggplot(aes(x = offset_nov_may_sst,
+    y = proxy_offset_nov_may_site,
+    color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1)
+
+uk37_plots
+
+#ggsave("seasonal transport bias vs uk37 seasonal offset.pdf", uk37_plots)
+```
+
+
+
+
+
+
+```{r}
+uk37_dist_plot <- uk37_results_datatable %>%
+  ggplot(aes(x = mean_dist_nov_may,
+    y = proxy_offset_nov_may_site,
+    color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1)
+
+uk37_dist_plot
+
+# ggsave("seasonal transport distance vs uk37 seasonal offset.pdf", uk37_plots)
+```
+
+
+```{r}
+uk37_seasonal_offset_plot <- uk37_results_datatable %>%
+  filter(wdepth > 500) %>%
+  ggplot(aes(x = offset_nov_may_sst,
+    y = proxy_offset_nov_may_site,
+    color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1)
+
+uk37_seasonal_offset_plot
+
+# ggsave("seasonal transport bias vs uk37 seasonal offset - sites over 500m depth.pdf", uk37_plots)
+```
+
+
+
+```{r}
+tex86_offset_plot <- tex86_ann_nemo_results %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point() 
+
+tex86_offset_plot
+
+ggsave("transport bias vs tex86 offset.pdf",tex86_offset_plot)
+```
+
+
+
+
+```{r}
+tex86_offset_plot <- tex86_results_datatable %>%
+  ggplot(aes(x = mean_dist,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1)
+
+tex86_offset_plot
+
+# ggsave("travel distance vs tex86 offset.pdf",tex86_offset_plot)
+```
+
+```{r}
+tex86_offset_depth_plot <- tex86_results_datatable %>%
+  filter(water_depth > 1000) %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1)
+
+tex86_offset_depth_plot
+
+# ggsave("modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot)
+```
+
+
+
+
+```{r}
+tex86_offset_dist_plot <- tex86_results_datatable %>%
+  filter(water_depth > 1000) %>%
+  ggplot(aes(x = mean_dist,
+             y = proxy_offset_site_sst,
+             color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1)
+
+tex86_offset_plot
+
+# ggsave("travel distance vs tex86 offset - only deep sites.pdf",tex86_offset_plot)
+```
+
+
+```{r}
+tex86_offset_sp6_plot <- tex86_results_datatable %>%
+  filter(speed == 6) %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = water_depth)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_cmocean("deep", direction = -1)
+
+tex86_offset_sp6_plot
+
+# ggsave("modeled vs tex86 offset - sp6.pdf",tex86_offset_plot)
+```
+
+
+
+
+
+```{r}
+tex86_dist_sp6_plot <- tex86_results_datatable %>%
+  filter(speed == 6) %>%
+  ggplot(aes(x = mean_dist,
+             y = proxy_offset_site_sst,
+             color = water_depth)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_cmocean("deep", direction = -1)
+
+tex86_dist_sp6_plot
+
+# ggsave("travel dist vs tex86 offset - sp6.pdf",tex86_offset_plot)
+```
 
 
 
