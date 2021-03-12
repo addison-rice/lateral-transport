@@ -65,38 +65,6 @@ seas_nemo_results <- left_join(nemo_mean_ann_results, select(seas_matchup, c(Loc
 
 
 
-Let's start by plotting transport distance and temperature offsets, maybe in jitter plots?
-```{r}
-plot1 <- nemo_mean_ann_results %>%
-  ggplot(aes(
-    x = speed,
-    y = mean_dist,
-    color = offset_ann_sst
-  )) +
-  geom_jitter() +
-  scale_color_gradient2() +
-  theme_grey()
-
-plot1
-```
-
-
-Proxy offsets vs lateral transport offsets
-```{r}
-uk37_results_datatable$speed = factor(uk37_results_datatable$speed,levels = c("Sp_500","Sp_250","Sp_100","Sp_50","Sp_25","Sp_12","Sp_6"))
-
-plot2 <- uk37_results_datatable %>%
-  ggplot(aes(
-    x = offset_ann_sst,
-    y = proxy_offset_site,
-    color = speed
-  )) + 
-  geom_point() +
-  scale_color_brewer(palette = "YlGn") +
-  theme_minimal()
-
-plot2
-```
 
 
 ```{r}
@@ -108,11 +76,14 @@ seas_check <- seas_nemo_results %>%
   )) +
   geom_point() +
   annotation_map(map_data("world")) +
-  coord_fixed()
+  coord_fixed() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_x_continuous(name = NULL, limits = c(-10,40)) +
+  scale_y_continuous(name = NULL, limits = c(30,48))
 
 seas_check
 
-ggsave("../results/figures/subbasin_map.eps")
+ggsave("../results/figures/subbasin_map.pdf")
 ```
 
 
@@ -124,11 +95,14 @@ depth_dist_seas <- seas_nemo_results %>%
     y = mean_dist,
     color = Subbasin
   )) +
-  geom_point()
+  geom_point() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_x_continuous(name = "Water depth (m)") +
+  scale_y_continuous(name = "Surface ocean to burial site distance (km)")
 
 depth_dist_seas
 
-ggsave("../results/figures/depth_dist_subbasin.eps")
+ggsave("../results/figures/depth_dist_subbasin.pdf")
 ```
 
 ```{r}
@@ -139,9 +113,15 @@ depth_offset_seas <- seas_nemo_results %>%
     y = offset_ann_sst,
     color = Subbasin
   )) +
-  geom_point()
+  geom_point() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_x_continuous(name = "Water depth (m)") +
+  scale_y_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Transport bias (6 m" * d^{-1} * ")"))
 
 depth_offset_seas
+
+ggsave("../results/figures/depth_offset_subbasin.pdf")
 ```
 
 
@@ -154,11 +134,14 @@ uk37_plots <- uk37_results_datatable %>%
     color = speed)) +
   geom_point() +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1)
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  scale_x_continuous(name = expression(paste("Nov to May ", SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled Nov-May transport bias at " * U[37]^{K} *" sites"))
 
 uk37_plots
 
-#ggsave("seasonal transport bias vs uk37 seasonal offset.pdf", uk37_plots)
+ggsave("../results/figures/uk37_seasonal_transport_bias_offsets.pdf")
 ```
 
 
