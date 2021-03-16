@@ -166,7 +166,7 @@ uk37_dist_plot <- uk37_results_datatable %>%
 
 uk37_dist_plot
 
-ggsave("seasonal transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
+ggsave("../results/figures/seasonal transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
 ```
 
 
@@ -211,7 +211,7 @@ uk37_dist_plot <- uk37_results_datatable %>%
 
 uk37_dist_plot
 
-ggsave("annual transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
+ggsave("../results/figures/annual transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
 ```
 
 
@@ -244,7 +244,7 @@ tex86_offset_plot <- tex86_results_datatable %>%
 
 tex86_offset_plot
 
-ggsave("transport bias vs tex86 offset.pdf",tex86_offset_plot)
+ggsave("../results/figures/transport bias vs tex86 offset.pdf",tex86_offset_plot)
 ```
 
 
@@ -265,7 +265,7 @@ tex86_dist_plot <- tex86_results_datatable %>%
 
 tex86_dist_plot
 
-ggsave("travel distance vs tex86 offset.pdf",tex86_dist_plot)
+ggsave("../results/figures/travel distance vs tex86 offset.pdf",tex86_dist_plot)
 ```
 
 ```{r}
@@ -284,7 +284,7 @@ tex86_offset_plot_deep <- tex86_results_datatable %>%
 
 tex86_offset_plot_deep
 
-ggsave("modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot_deep)
+ggsave("../results/figures/modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot_deep)
 ```
 
 
@@ -306,7 +306,7 @@ tex86_dist_plot_deep <- tex86_results_datatable %>%
 
 tex86_dist_plot_deep
 
-ggsave("travel distance vs tex86 offset - only deep sites.pdf",tex86_dist_plot_deep)
+ggsave("../results/figures/travel distance vs tex86 offset - only deep sites.pdf",tex86_dist_plot_deep)
 ```
 
 
@@ -326,7 +326,7 @@ tex86_offset_sp6_plot <- tex86_results_datatable %>%
 
 tex86_offset_sp6_plot
 
-ggsave("modeled vs tex86 offset - sp6.pdf",tex86_offset_sp6_plot)
+ggsave("../results/figures/modeled vs tex86 offset - sp6.pdf",tex86_offset_sp6_plot)
 ```
 
 
@@ -349,7 +349,7 @@ tex86_dist_sp6_plot <- tex86_results_datatable %>%
 
 tex86_dist_sp6_plot
 
-ggsave("travel dist vs tex86 offset - sp6.pdf",tex86_dist_sp6_plot)
+ggsave("../results/figures/travel dist vs tex86 offset - sp6.pdf",tex86_dist_sp6_plot)
 ```
 
 
