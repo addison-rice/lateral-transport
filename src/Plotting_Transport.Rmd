@@ -98,7 +98,8 @@ depth_dist_seas <- seas_nemo_results %>%
   geom_point() +
   scale_color_brewer(palette = "Dark2") +
   scale_x_continuous(name = "Water depth (m)") +
-  scale_y_continuous(name = "Surface ocean to burial site distance (km)")
+  scale_y_continuous(name = "Mean surface ocean to burial site distance (km)") +
+  ggtitle("Water depth and mean travel distance in Mediterranean subbasins")
 
 depth_dist_seas
 
@@ -135,6 +136,7 @@ uk37_plots <- uk37_results_datatable %>%
   geom_point() +
   theme_minimal() +
   scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
   scale_x_continuous(name = expression(paste("Nov to May ", SST[end] - SST[site], " (\u00b0C)"))) +
   scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled Nov-May transport bias at " * U[37]^{K} *" sites"))
@@ -156,37 +158,89 @@ uk37_dist_plot <- uk37_results_datatable %>%
     color = speed)) +
   geom_point() +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1)
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
+  scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled Nov-May transport distance and proxy offset for " * U[37]^{K} *" sites"))
 
 uk37_dist_plot
 
-# ggsave("seasonal transport distance vs uk37 seasonal offset.pdf", uk37_plots)
+ggsave("seasonal transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
 ```
 
 
+
+
 ```{r}
-uk37_seasonal_offset_plot <- uk37_results_datatable %>%
-  filter(wdepth > 500) %>%
-  ggplot(aes(x = offset_nov_may_sst,
-    y = proxy_offset_nov_may_site,
+uk37_plots_ann <- uk37_results_datatable %>%
+  ggplot(aes(x = offset_ann_sst,
+    y = proxy_offset_site,
     color = speed)) +
   geom_point() +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1)
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_y_continuous(name = expression(paste(SST[UK37] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled annual transport bias at " * U[37]^{K} *" sites"))
 
-uk37_seasonal_offset_plot
+uk37_plots_ann
 
-# ggsave("seasonal transport bias vs uk37 seasonal offset - sites over 500m depth.pdf", uk37_plots)
+ggsave("../results/figures/uk37_annual_transport_bias_offsets.pdf")
 ```
 
 
 
+
+
+
+
 ```{r}
-tex86_offset_plot <- tex86_ann_nemo_results %>%
+uk37_dist_plot <- uk37_results_datatable %>%
+  ggplot(aes(x = mean_dist_ann,
+    y = proxy_offset_site,
+    color = speed)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
+  scale_y_continuous(name = expression(paste(SST[UK37] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled mean annual transport distance and proxy offset for " * U[37]^{K} *" sites"))
+
+uk37_dist_plot
+
+ggsave("annual transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+tex86_offset_plot <- tex86_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
              y = proxy_offset_site_sst,
              color = speed)) +
-  geom_point() 
+  geom_point()  +
+  theme_minimal() +
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled transport bias at " * TEX[86] *" sites"))
 
 tex86_offset_plot
 
@@ -197,50 +251,62 @@ ggsave("transport bias vs tex86 offset.pdf",tex86_offset_plot)
 
 
 ```{r}
-tex86_offset_plot <- tex86_results_datatable %>%
+tex86_dist_plot <- tex86_results_datatable %>%
   ggplot(aes(x = mean_dist,
              y = proxy_offset_site_sst,
              color = speed)) +
   geom_point() +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1)
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
+  scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled transport distance and proxy offset for "  * TEX[86] *" sites"))
 
-tex86_offset_plot
+tex86_dist_plot
 
-# ggsave("travel distance vs tex86 offset.pdf",tex86_offset_plot)
+ggsave("travel distance vs tex86 offset.pdf",tex86_dist_plot)
 ```
 
 ```{r}
-tex86_offset_depth_plot <- tex86_results_datatable %>%
+tex86_offset_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
   ggplot(aes(x = offset_ann_sst,
              y = proxy_offset_site_sst,
              color = speed)) +
   geom_point() +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1)
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled transport bias at " * TEX[86] *" sites deeper than 1000 m"))
 
-tex86_offset_depth_plot
+tex86_offset_plot_deep
 
-# ggsave("modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot)
+ggsave("modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot_deep)
 ```
 
 
 
 
 ```{r}
-tex86_offset_dist_plot <- tex86_results_datatable %>%
+tex86_dist_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
   ggplot(aes(x = mean_dist,
              y = proxy_offset_site_sst,
              color = speed)) +
   geom_point() +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1)
+  scale_color_brewer(palette = "Greys", direction = -1) +
+  labs(color = "Sinking speed (m/d)") +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
+  scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("Modeled transport distance and proxy offset for "  * TEX[86] *" sites deeper than 1000 m"))
 
-tex86_offset_plot
+tex86_dist_plot_deep
 
-# ggsave("travel distance vs tex86 offset - only deep sites.pdf",tex86_offset_plot)
+ggsave("travel distance vs tex86 offset - only deep sites.pdf",tex86_dist_plot_deep)
 ```
 
 
@@ -252,11 +318,15 @@ tex86_offset_sp6_plot <- tex86_results_datatable %>%
              color = water_depth)) +
   geom_point() +
   theme_minimal() +
-  scale_color_cmocean("deep", direction = -1)
+  scale_color_cmocean("deep", direction = -1) +
+  guides(color = guide_colorbar(title = "Water depth (m)")) +
+  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("6 m/d transport bias at " * TEX[86] *" sites"))
 
 tex86_offset_sp6_plot
 
-# ggsave("modeled vs tex86 offset - sp6.pdf",tex86_offset_plot)
+ggsave("modeled vs tex86 offset - sp6.pdf",tex86_offset_sp6_plot)
 ```
 
 
@@ -271,11 +341,15 @@ tex86_dist_sp6_plot <- tex86_results_datatable %>%
              color = water_depth)) +
   geom_point() +
   theme_minimal() +
-  scale_color_cmocean("deep", direction = -1)
+  scale_color_cmocean("deep", direction = -1) +
+  guides(color = guide_colorbar(title = "Water depth (m)")) +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
+  scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
+  ggtitle(expression("6 m/d transport distance and proxy offset for "  * TEX[86] *" sites"))
 
 tex86_dist_sp6_plot
 
-# ggsave("travel dist vs tex86 offset - sp6.pdf",tex86_offset_plot)
+ggsave("travel dist vs tex86 offset - sp6.pdf",tex86_dist_sp6_plot)
 ```
 
 
