@@ -357,7 +357,31 @@ ggsave("../results/figures/travel dist vs tex86 offset - sp6.pdf",tex86_dist_sp6
 
 
 
+Figure for the poster showing scatter plots of 6 m/d transport bias and proxy bias for both tex and uk
+```{r} 
+# Have to append the data to plot it all up with a column for proxy to make different color categories.
+scatter_bias_plot <- bind_rows(
+  'TEX86' = select(filter(
+    tex86_results_datatable, speed ==6),
+    c(Location_key,Latitude,Longitude,offset_ann_sst,proxy_offset_site_sst)),
+  'UK37' = select(filter(
+    uk37_results_datatable, speed == 6),
+    c(Location_key,Latitude,Longitude,offset_ann_sst,proxy_offset_site_sst = proxy_offset_site)),
+  .id = "Proxy") %>%
+  ggplot(aes(x = offset_ann_sst,
+             y = proxy_offset_site_sst,
+             color = Proxy)) +
+  geom_point(size = 4) +
+  theme_bw(base_size = 15) +
+  scale_color_manual(values = c('#bf5b17','#386cb0')) +
+  scale_x_continuous(name = expression(paste("Transport bias (6 m/d) = ",SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_y_continuous(name = expression(paste("Proxy bias = ",SST[proxy] - SST[site], " (\u00b0C)")))
 
+scatter_bias_plot
+
+ggsave("../results/figures/transport bias vs proxy offset - sp6.pdf",scatter_bias_plot)
+
+```
 
 
 
