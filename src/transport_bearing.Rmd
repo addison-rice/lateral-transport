@@ -1,0 +1,55 @@
+---
+title: "Directionality analysis"
+output: html_notebook
+---
+
+This notebook will calculate the bearing of transported particles and use a wind rose plot to visualize the bearing and distance of transported particles.
+
+```{r}
+library(tidyverse)
+
+library(geosphere, include.only = c("bearingRhumb"))
+```
+
+Load the raw data to calculate bearing from each site-endpoint pair.
+```{r}
+traj_data <- read_csv("~/Documents/CodeRepo/lat-trans-med/data/processed/extracted_trajectory_info.csv", 
+    col_types = cols(`150m_lat` = col_double(), 
+        `150m_lon` = col_double()))
+```
+
+Calculate the bearing from the site to the endpoint for both surface and subsurface.
+```{r}
+traj_data <- na.omit(traj_data) %>%
+  rename(deep_lon = "150m_lon",
+         deep_lat = "150m_lat") %>%
+  rowwise %>%
+  mutate(
+    bearing_surface = bearingRhumb(c(site_lon, site_lat), c(end_lon, end_lat)),
+    bearing_subsurface = bearingRhumb(c(site_lon, site_lat), c(deep_lon,deep_lat))
+  )
+```
+
+Calculate the difference in transport distance, distance between endpoint and deep endpoint, and difference in bearing angle.
+```{r}
+traj_data <- na.omit(traj_data) %>%
+  rowwise %>%
+  mutate(travel_dist_diff = dist_final - dist_150m) %>%
+  mutate(dist_end_deep = geosphere::distm(c(deep_lat,deep_lon),c(end_lat,end_lon))) %>%
+  mutate(bearing_diff = if(abs(bearing_surface - bearing_subsurface) > 180) (
+      360 - abs(bearing_surface - bearing_subsurface)
+    ) else (
+      abs(bearing_surface - bearing_subsurface)
+    )
+  )
+```
+
+Calculate distance-weighted mean bearings for each site and sinking speed
+```{r}
+
+```
+
+
+
+
+
