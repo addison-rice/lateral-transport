@@ -57,7 +57,41 @@ bearings_plot <- na.omit(traj_data) %>%
 bearings_plot
 ```
 
+summarize by site and speed and take the travel distance weighted mean and the mean difference in bearing
+```{r}
+traj_data <- ungroup(na.omit(traj_data)) %>%
+  mutate(circ_bearing_surface = circular::circular(bearing_surface, units = "degrees"),
+         circ_bearing_subsurface = circular::circular(bearing_subsurface, units = "degrees"))
+bearings_summary <- traj_data %>%
+  group_by(site_lat,site_lon,speed,water_depth) %>%
+  summarise(
+    mean_dist_final = mean(dist_final),
+    mean_dist_deep = mean(dist_150m),
+    count_traj = n(),
+    mean_bearing = circular::weighted.mean.circular(circ_bearing_surface,
+                                                    dist_final/(mean_dist_final*count_traj)),
+    mean_bearing_deep = circular::weighted.mean.circular(circ_bearing_subsurface,
+                                                    dist_150m/(mean_dist_deep*count_traj))
+  ) %>%
+  mutate(mean_bearing_diff = if(abs(mean_bearing - mean_bearing_deep) > 180) (
+    360 - abs(mean_bearing - mean_bearing_deep)
+    ) else (
+      abs(mean_bearing - mean_bearing_deep)))
+```
 
+plot it again?
+```{r}
+bearing_summary_plot <- bearings_summary %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(x = site_lon,
+             y = site_lat,
+             color = mean_bearing_diff)) +
+  geom_point() +
+  annotation_map(map_data("world")) +
+  coord_fixed()
 
+bearing_summary_plot
+ggsave("../results/figures/bearing_surface_subsurface.pdf")
+```
 
 
