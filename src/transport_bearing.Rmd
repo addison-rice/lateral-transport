@@ -44,9 +44,17 @@ traj_data <- na.omit(traj_data) %>%
   )
 ```
 
-Calculate distance-weighted mean bearings for each site and sinking speed
+plot of bearings
 ```{r}
+bearings_plot <- na.omit(traj_data) %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(x = bearing_surface,
+      y = bearing_subsurface,
+      color = site_lon)
+      ) +
+  geom_point()
 
+bearings_plot
 ```
 
 
