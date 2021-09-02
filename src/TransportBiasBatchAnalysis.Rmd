@@ -27,7 +27,6 @@ sst_data <- read_csv('../data/processed/extracted_trajectory_info.csv')
 
 uk37_coretop <- read_csv('../data/raw/uk37_table.csv')
 tex86_coretop <- read_csv('../data/raw/tex_table.csv')
-d18O_coretop <- read_csv('../data/raw/d18O_table.csv')
 ```
 
 
@@ -78,7 +77,6 @@ Get proxy-based subsets for matching up with the NEMO data
 ```{r}
 uk_sites <- filter(proxy_db, (!is.na(proxy_db$UK37_ID)))
 tex_sites <- filter(proxy_db,(!is.na(proxy_db$TEX86_ID)))
-d18O_sites <- filter(proxy_db,(!is.na(proxy_db$foram_d18O_ID)))
 ```
 
 
@@ -158,12 +156,10 @@ Match the site IDs, run IDs, and get proxy-based subsets
 ```{r}
 uk_ssts_ann_nemo <- left_join(uk_sites, nemo_mean_offset, by = "run_loc")
 tex_ssts_ann_nemo <- left_join(tex_sites, nemo_mean_offset, by = "run_loc")
-d18O_ssts_ann_nemo <- left_join(d18O_sites, nemo_mean_offset, by = "run_loc")
 uk_ssts_nov_may_nemo <- left_join(uk_sites, nemo_nov_may_offset, by = "run_loc")
 
 uk37_ann_nemo_results <- left_join(uk_ssts_ann_nemo, uk37_coretop, by = c("UK37_ID"))
 tex86_ann_nemo_results <- left_join(tex_ssts_ann_nemo, tex86_coretop, by = c("TEX86_ID"))
-d18O_ann_nemo_results <- left_join(d18O_ssts_ann_nemo, d18O_coretop, by = c("foram_d18O_ID"))
 uk37_nov_may_nemo_results <- left_join(uk_ssts_nov_may_nemo, uk37_coretop, by = c("UK37_ID"))
 ```
 
