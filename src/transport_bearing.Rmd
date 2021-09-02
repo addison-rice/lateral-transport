@@ -94,4 +94,9 @@ bearing_summary_plot
 ggsave("../results/figures/bearing_surface_subsurface.pdf")
 ```
 
+```{r}
+bearing_hist <- ggplot(data = traj_data, aes(x = bearing_diff)) + geom_histogram()
+
+bearing_hist
+```
 
