@@ -100,3 +100,20 @@ bearing_hist <- ggplot(data = traj_data, aes(x = bearing_diff)) + geom_histogram
 bearing_hist
 ```
 
+```{r}
+transport_hist <- traj_data %>%
+  filter(speed == "Sp_6") %>%
+  ggplot(aes(x = abs(travel_dist_diff))) + geom_histogram(binwidth = 10)
+
+transport_hist
+```
+
+```{r}
+quantiles_travel_dist_diff <- traj_data %>%
+  group_by(speed) %>%
+  summarise(q75 = quantile(travel_dist_diff, 0.75),
+            q95 = quantile(travel_dist_diff, 0.9))
+
+quantiles_travel_dist_diff
+```
+
