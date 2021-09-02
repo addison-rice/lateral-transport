@@ -14,8 +14,6 @@ library(tidyverse)
 library(ggmap)
 library(cmocean)
 ```
-
-
 Load data output from the batch analysis code.
 ```{r}
 
@@ -27,8 +25,6 @@ tex86_results_datatable <- read_csv("../data/temp/tex86_results_datatable.csv")
 
 seas_matchup <- read.csv("../data/raw/Sediment_Locations_seas.csv")
 ```
-
-
 
 Make the sinking speed into a factor and in the right order
 ```{r}
@@ -45,30 +41,15 @@ tex86_results_datatable <- tex86_results_datatable %>%
   transform(speed = as.factor(speed))
 ```
 
-
 Match the keys for subbasin analysis
 ```{r}
 seas_nemo_results <- left_join(nemo_mean_ann_results, select(seas_matchup, c(Location_key, Subbasin)), by = c("run_loc" = "Location_key"))
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Subbasin analysis figure
 ```{r}
 seas_check <- seas_nemo_results %>%
+  filter(speed == "Sp_6") %>%
   ggplot(aes(
     x = site_lon,
     y = site_lat,
@@ -86,7 +67,7 @@ seas_check
 ggsave("../results/figures/subbasin_map.pdf")
 ```
 
-
+Plot the depth vs distance by subbasin
 ```{r}
 depth_dist_seas <- seas_nemo_results %>%
   filter(speed == "Sp_6") %>%
@@ -99,13 +80,14 @@ depth_dist_seas <- seas_nemo_results %>%
   scale_color_brewer(palette = "Dark2") +
   scale_x_continuous(name = "Water depth (m)") +
   scale_y_continuous(name = "Mean surface ocean to burial site distance (km)") +
-  ggtitle("Water depth and mean travel distance in Mediterranean subbasins")
+  ggtitle("Water depth and mean travel distance in Mediterranean subbasins, 6m/d sinking speed")
 
 depth_dist_seas
 
 ggsave("../results/figures/depth_dist_subbasin.pdf")
 ```
 
+Depth vs transport bias by subbasin
 ```{r}
 depth_offset_seas <- seas_nemo_results %>%
   filter(speed == "Sp_6") %>%
@@ -125,9 +107,7 @@ depth_offset_seas
 ggsave("../results/figures/depth_offset_subbasin.pdf")
 ```
 
-
-
-
+Seasonal bias
 ```{r}
 uk37_plots <- uk37_results_datatable %>%
   ggplot(aes(x = offset_nov_may_sst,
@@ -146,11 +126,7 @@ uk37_plots
 ggsave("../results/figures/uk37_seasonal_transport_bias_offsets.pdf")
 ```
 
-
-
-
-
-
+Seasonal travel distance
 ```{r}
 uk37_dist_plot <- uk37_results_datatable %>%
   ggplot(aes(x = mean_dist_nov_may,
@@ -169,9 +145,7 @@ uk37_dist_plot
 ggsave("../results/figures/seasonal transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
 ```
 
-
-
-
+Modeled bias - UK37
 ```{r}
 uk37_plots_ann <- uk37_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
@@ -190,12 +164,7 @@ uk37_plots_ann
 ggsave("../results/figures/uk37_annual_transport_bias_offsets.pdf")
 ```
 
-
-
-
-
-
-
+Travel distance - UK37
 ```{r}
 uk37_dist_plot <- uk37_results_datatable %>%
   ggplot(aes(x = mean_dist_ann,
@@ -214,21 +183,7 @@ uk37_dist_plot
 ggsave("../results/figures/annual transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+TEX86 transport bias
 ```{r}
 tex86_offset_plot <- tex86_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
@@ -247,9 +202,7 @@ tex86_offset_plot
 ggsave("../results/figures/transport bias vs tex86 offset.pdf",tex86_offset_plot)
 ```
 
-
-
-
+TEX86 travel distance
 ```{r}
 tex86_dist_plot <- tex86_results_datatable %>%
   ggplot(aes(x = mean_dist,
@@ -268,6 +221,7 @@ tex86_dist_plot
 ggsave("../results/figures/travel distance vs tex86 offset.pdf",tex86_dist_plot)
 ```
 
+TEX86 transport bias for sites >1000m water depth
 ```{r}
 tex86_offset_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
@@ -287,9 +241,7 @@ tex86_offset_plot_deep
 ggsave("../results/figures/modeled vs tex86 offset - only deep sites.pdf",tex86_offset_plot_deep)
 ```
 
-
-
-
+TEX86 travel distance for sites >1000m water depth
 ```{r}
 tex86_dist_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
@@ -309,7 +261,7 @@ tex86_dist_plot_deep
 ggsave("../results/figures/travel distance vs tex86 offset - only deep sites.pdf",tex86_dist_plot_deep)
 ```
 
-
+Transport bias at TEX86 sites, 6m/d sinking speed, color by water depth
 ```{r}
 tex86_offset_sp6_plot <- tex86_results_datatable %>%
   filter(speed == 6) %>%
@@ -329,10 +281,7 @@ tex86_offset_sp6_plot
 ggsave("../results/figures/modeled vs tex86 offset - sp6.pdf",tex86_offset_sp6_plot)
 ```
 
-
-
-
-
+Travl distance at TEX86 sites, 6m/d sinking speed, color by water depth
 ```{r}
 tex86_dist_sp6_plot <- tex86_results_datatable %>%
   filter(speed == 6) %>%
@@ -351,11 +300,6 @@ tex86_dist_sp6_plot
 
 ggsave("../results/figures/travel dist vs tex86 offset - sp6.pdf",tex86_dist_sp6_plot)
 ```
-
-
-
-
-
 
 Figure for the poster showing scatter plots of 6 m/d transport bias and proxy bias for both tex and uk
 ```{r} 
@@ -382,17 +326,3 @@ scatter_bias_plot
 ggsave("../results/figures/transport bias vs proxy offset - sp6.pdf",scatter_bias_plot)
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
