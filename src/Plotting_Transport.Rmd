@@ -111,12 +111,11 @@ Seasonal bias
 ```{r}
 uk37_plots <- uk37_results_datatable %>%
   ggplot(aes(x = offset_nov_may_sst,
-    y = proxy_offset_nov_may_site,
-    color = speed)) +
-  geom_point() +
+    y = proxy_offset_nov_may_site)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)") +
   scale_x_continuous(name = expression(paste("Nov to May ", SST[end] - SST[site], " (\u00b0C)"))) +
   scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled Nov-May transport bias at " * U[37]^{K} *" sites"))
@@ -130,12 +129,11 @@ Seasonal travel distance
 ```{r}
 uk37_dist_plot <- uk37_results_datatable %>%
   ggplot(aes(x = mean_dist_nov_may,
-    y = proxy_offset_nov_may_site,
-    color = speed)) +
-  geom_point() +
+    y = proxy_offset_nov_may_site)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)") +
   scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
   scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled Nov-May transport distance and proxy offset for " * U[37]^{K} *" sites"))
@@ -149,12 +147,11 @@ Modeled bias - UK37
 ```{r}
 uk37_plots_ann <- uk37_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
-    y = proxy_offset_site,
-    color = speed)) +
-  geom_point() +
+    y = proxy_offset_site)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)") +
   scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
   scale_y_continuous(name = expression(paste(SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled annual transport bias at " * U[37]^{K} *" sites"))
@@ -168,12 +165,11 @@ Travel distance - UK37
 ```{r}
 uk37_dist_plot <- uk37_results_datatable %>%
   ggplot(aes(x = mean_dist_ann,
-    y = proxy_offset_site,
-    color = speed)) +
-  geom_point() +
+    y = proxy_offset_site)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)")  +
   scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
   scale_y_continuous(name = expression(paste(SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled mean annual transport distance and proxy offset for " * U[37]^{K} *" sites"))
@@ -187,12 +183,11 @@ TEX86 transport bias
 ```{r}
 tex86_offset_plot <- tex86_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
-             y = proxy_offset_site_sst,
-             color = speed)) +
-  geom_point()  +
+             y = proxy_offset_site_sst)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)")  +
   scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport bias at " * TEX[86] *" sites"))
@@ -206,12 +201,11 @@ TEX86 travel distance
 ```{r}
 tex86_dist_plot <- tex86_results_datatable %>%
   ggplot(aes(x = mean_dist,
-             y = proxy_offset_site_sst,
-             color = speed)) +
-  geom_point() +
+             y = proxy_offset_site_sst)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)")  +
   scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport distance and proxy offset for "  * TEX[86] *" sites"))
@@ -226,12 +220,11 @@ TEX86 transport bias for sites >1000m water depth
 tex86_offset_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
   ggplot(aes(x = offset_ann_sst,
-             y = proxy_offset_site_sst,
-             color = speed)) +
-  geom_point() +
+             y = proxy_offset_site_sst)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)") +
   scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport bias at " * TEX[86] *" sites deeper than 1000 m"))
@@ -246,12 +239,11 @@ TEX86 travel distance for sites >1000m water depth
 tex86_dist_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
   ggplot(aes(x = mean_dist,
-             y = proxy_offset_site_sst,
-             color = speed)) +
-  geom_point() +
+             y = proxy_offset_site_sst)) +
+  geom_point(aes(fill = speed), color = "black",pch = 21) +
   theme_minimal() +
-  scale_color_brewer(palette = "Greys", direction = -1) +
-  labs(color = "Sinking speed (m/d)") +
+  scale_fill_brewer(palette = "Greys", direction = -1) +
+  labs(fill = "Sinking speed (m/d)")  +
   scale_x_continuous(name = "Mean surface ocean to burial site distance (km)") +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport distance and proxy offset for "  * TEX[86] *" sites deeper than 1000 m"))
