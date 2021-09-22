@@ -112,7 +112,7 @@ Seasonal bias
 uk37_plots <- uk37_results_datatable %>%
   ggplot(aes(x = offset_nov_may_sst,
     y = proxy_offset_nov_may_site)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)") +
@@ -130,7 +130,7 @@ Seasonal travel distance
 uk37_dist_plot <- uk37_results_datatable %>%
   ggplot(aes(x = mean_dist_nov_may,
     y = proxy_offset_nov_may_site)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)") +
@@ -148,7 +148,7 @@ Modeled bias - UK37
 uk37_plots_ann <- uk37_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
     y = proxy_offset_site)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)") +
@@ -166,7 +166,7 @@ Travel distance - UK37
 uk37_dist_plot <- uk37_results_datatable %>%
   ggplot(aes(x = mean_dist_ann,
     y = proxy_offset_site)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)")  +
@@ -184,7 +184,7 @@ TEX86 transport bias
 tex86_offset_plot <- tex86_results_datatable %>%
   ggplot(aes(x = offset_ann_sst,
              y = proxy_offset_site_sst)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)")  +
@@ -202,7 +202,7 @@ TEX86 travel distance
 tex86_dist_plot <- tex86_results_datatable %>%
   ggplot(aes(x = mean_dist,
              y = proxy_offset_site_sst)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)")  +
@@ -221,7 +221,7 @@ tex86_offset_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
   ggplot(aes(x = offset_ann_sst,
              y = proxy_offset_site_sst)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)") +
@@ -240,7 +240,7 @@ tex86_dist_plot_deep <- tex86_results_datatable %>%
   filter(water_depth > 1000) %>%
   ggplot(aes(x = mean_dist,
              y = proxy_offset_site_sst)) +
-  geom_point(aes(fill = speed), color = "black",pch = 21) +
+  geom_point(aes(fill = speed), color = "black",pch = 21, stroke = 0.25) +
   theme_minimal() +
   scale_fill_brewer(palette = "Greys", direction = -1) +
   labs(fill = "Sinking speed (m/d)")  +
