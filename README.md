@@ -1,6 +1,6 @@
 # Lateral transport of sinking particles in the Mediterranean Sea
 
-Version 0.1.0
+Version 1.0.1
 
 The goal of this project is to assess the impact of lateral transport on sinking paleoceanographic proxy carriers. 
 
