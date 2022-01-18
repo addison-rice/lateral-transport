@@ -22,8 +22,18 @@ Load:
 
 ```{r}
 proxy_db <- read_csv('../data/raw/Sediment_Locations.csv')
-sst_data <- read_csv('../data/processed/extracted_trajectory_info.csv')
-
+sst_data <- read_csv("~/Documents/CodeRepo/lat-trans-med/data/processed/extracted_trajectory_info_all.csv", 
+    col_types = cols(speed = col_character(), 
+        trajectory = col_double(), water_depth = col_double(), 
+        site_lat = col_double(), site_lon = col_double(), 
+        end_lat = col_double(), end_lon = col_double(), 
+        `150m_lat` = col_double(), `150m_lon` = col_double(), 
+        dist_final = col_double(), dist_150m = col_double(), 
+        end_time = col_double(), `150m_time` = col_double(), 
+        endpt_sst = col_double(), deep_sst = col_double(), 
+        days_end = col_double(), months_end = col_double(), 
+        years_end = col_double(), days_deep = col_double(), 
+        months_deep = col_double(), years_deep = col_double()))
 
 uk37_coretop <- read_csv('../data/raw/uk37_table.csv')
 tex86_coretop <- read_csv('../data/raw/tex_table.csv')
