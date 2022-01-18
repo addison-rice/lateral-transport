@@ -88,8 +88,8 @@ depth_dist_seas <- seas_nemo_results %>%
   geom_vline(xintercept = 0, color = "grey") +
   geom_point() +
   scale_color_brewer(palette = "Dark2") +
-  scale_x_continuous(name = "Water depth (m)", expand = c(0, 0)) +
-  scale_y_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0)) +
+  scale_x_continuous(name = "Water depth (m)", limits = c(0, 3600), expand = c(0, 0)) +
+  scale_y_continuous(name = "Mean surface ocean to burial site distance (km)", limits = c(0,300), expand = c(0, 0)) +
   ggtitle("Water depth and mean travel distance in Mediterranean subbasins, 6m/d sinking speed")
 
 depth_dist_seas
@@ -110,8 +110,8 @@ depth_offset_seas <- seas_nemo_results %>%
   geom_vline(xintercept = 0, color = "grey") +
   geom_point() +
   scale_color_brewer(palette = "Dark2") +
-  scale_x_continuous(name = "Water depth (m)", expand = c(0, 0)) +
-  scale_y_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_x_continuous(name = "Water depth (m)", limits = c(0, 3600), expand = c(0, 0)) +
+  scale_y_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)")), limits = c(-0.75,0.75)) +
   ggtitle(expression("Transport bias (6 m" * d^{-1} * ")"))
 
 depth_offset_seas
@@ -131,8 +131,8 @@ uk37_plots <- uk37_results_datatable %>%
   scale_shape_manual(values = c(25,21,22,23,24,25,21, 22)) +
   stat_cor(cor.coef.name = c("R"), aes(fill = speed, label = ..r.label..)) +
   labs(fill = "Sinking speed (m/d)") +
-  scale_x_continuous(name = expression(paste("Nov to May ", SST[end] - SST[site], " (\u00b0C)"))) +
-  scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
+  scale_x_continuous(name = expression(paste("Nov to May ", SST[end] - SST[site], " (\u00b0C)")), limits = c(-0.75,0.75)) +
+  scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)")), limits = c(-3.5,3.5)) +
   ggtitle(expression("Modeled Nov-May transport bias at " * U[37]^{K} *" sites"))
 
 uk37_plots
@@ -151,8 +151,8 @@ uk37_dist_plot <- uk37_results_datatable %>%
   scale_fill_cmocean("speed", discrete = TRUE) +
   scale_shape_manual(values = c(25,21,22,23,24,25,21, 22)) +
   labs(fill = "Sinking speed (m/d)") +
-  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0)) +
-  scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)"))) +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0), limits = c(0,300)) +
+  scale_y_continuous(name = expression(paste("Nov to May ", SST[UK37] - SST[site], " (\u00b0C)")), limits = c(-3.5,3.5)) +
   ggtitle(expression("Modeled Nov-May transport distance and proxy offset for " * U[37]^{K} *" sites"))
 
 uk37_dist_plot
@@ -172,7 +172,7 @@ uk37_plots_ann <- uk37_results_datatable %>%
   scale_shape_manual(values = c(25,21,22,23,24,25,21, 22)) +
   labs(fill = "Sinking speed (m/d)") +
   stat_cor(cor.coef.name = c("R"), aes(fill = speed, label = ..r.label..)) +
-  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)")), limits = c(-0.85,0.85)) +
   scale_y_continuous(name = expression(paste(SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled annual transport bias at " * U[37]^{K} *" sites"))
 
@@ -192,7 +192,7 @@ uk37_dist_plot <- uk37_results_datatable %>%
   scale_fill_cmocean("speed", discrete = TRUE) +
   scale_shape_manual(values = c(25,21,22,23,24,25,21, 22)) +
   labs(fill = "Sinking speed (m/d)") +
-  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0)) +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0), limits = c(0,300)) +
   scale_y_continuous(name = expression(paste(SST[UK37] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled mean annual transport distance and proxy offset for " * U[37]^{K} *" sites"))
 
@@ -213,7 +213,7 @@ tex86_offset_plot <- tex86_results_datatable %>%
   scale_shape_manual(values = c(25,21,22,23,24,25,21, 22)) +
   stat_cor(cor.coef.name = c("R"), aes(fill = speed, label = ..r.label..)) +
   labs(fill = "Sinking speed (m/d)") +
-  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)"))) +
+  scale_x_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)")), limits = c(-0.85,0.85)) +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport bias at " * TEX[86] *" sites"))
 
@@ -233,7 +233,7 @@ tex86_dist_plot <- tex86_results_datatable %>%
   scale_fill_cmocean("speed", discrete = TRUE) +
   scale_shape_manual(values = c(25,21,22,23,24,25,21,22)) +
   labs(fill = "Sinking speed (m/d)") +
-  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0,0)) +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0,0), limits = c(0,300)) +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport distance and proxy offset for "  * TEX[86] *" sites"))
 
@@ -276,7 +276,7 @@ tex86_dist_plot_deep <- tex86_results_datatable %>%
   scale_fill_cmocean("speed", discrete = TRUE) +
   scale_shape_manual(values = c(25,21,22,23,24,25,21,22)) +
   labs(fill = "Sinking speed (m/d)") +
-  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0)) +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0), limits = c(0,300)) +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("Modeled transport distance and proxy offset for "  * TEX[86] *" sites deeper than 1000 m"))
 
@@ -324,7 +324,7 @@ tex86_dist_sp6_plot <- tex86_results_datatable %>%
              stroke = 0.25) +
   scale_fill_cmocean("deep", direction = -1) +
   guides(fill = guide_colorbar(title = "Water depth (m)")) +
-  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0)) +
+  scale_x_continuous(name = "Mean surface ocean to burial site distance (km)", expand = c(0, 0), limits = c(0,300)) +
   scale_y_continuous(name = expression(paste(SST[TEX86] - SST[site], " (\u00b0C)"))) +
   ggtitle(expression("6 m/d transport distance and proxy offset for "  * TEX[86] *" sites"))
 
