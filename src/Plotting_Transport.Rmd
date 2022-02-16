@@ -119,6 +119,29 @@ depth_offset_seas
 ggsave("../results/figures/depth_offset_subbasin.pdf")
 ```
 
+```{r}
+depth_offset_seas <- seas_nemo_results %>%
+  filter(speed == "Sp_0") %>%
+  ggplot(aes(
+    x = Subbasin,
+    y = offset_ann_sst,
+    color = Subbasin
+  )) +
+  #geom_hline(yintercept = 0, color = "grey") +
+  #geom_vline(xintercept = 0, color = "grey") +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_brewer(palette = "Dark2") +
+  #scale_x_discrete(name = "Mean surface ocean to burial site distance (km)", limits = c(0,300), expand = c(0, 0)) +
+  scale_y_continuous(name = expression(paste(SST[end] - SST[site], " (\u00b0C)")), limits = c(-0.75,0.75)) +
+  ggtitle(expression("Transport bias no sink"))
+
+depth_offset_seas
+
+ggsave("../results/figures/offset_subbasin_no-sink.pdf")
+```
+
+
 Seasonal bias
 ```{r}
 uk37_plots <- uk37_results_datatable %>%
@@ -198,7 +221,7 @@ uk37_dist_plot <- uk37_results_datatable %>%
 
 uk37_dist_plot
 
-ggsave("../results/figures/annual transport distance vs uk37 seasonal offset.pdf", uk37_dist_plot)
+ggsave("../results/figures/annual transport distance vs uk37 offset.pdf", uk37_dist_plot)
 ```
 
 TEX86 transport bias
